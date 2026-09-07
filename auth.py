@@ -25,20 +25,20 @@ def find_credentials_file() -> Path:
         if path.is_file():
             return path
     raise CredentialsNotFoundError(
-        "OAuthクライアント設定ファイル (credentials.json) が見つかりませんでした。\n"
-        f"以下のいずれかに配置してください:\n"
+        "OAuth client configuration file (credentials.json) was not found.\n"
+        f"Please place credentials.json in one of the following locations:\n"
         f"  1. {CONFIG_DIR / 'credentials.json'}\n"
         f"  2. {Path(__file__).parent / 'credentials.json'}\n\n"
-        "取得手順:\n"
-        "1. Google Cloud Console (https://console.cloud.google.com/) でプロジェクトを作成\n"
-        "2. 'Photos Library API' を有効化\n"
-        "3. OAuth同意画面を設定 (User Type: 外部、テストユーザーに対象アカウントを追加)\n"
-        "4. 認証情報 > 認証情報を作成 > OAuthクライアントID (種類: デスクトップ アプリ) を作成\n"
-        "5. ダウンロードしたJSONを上記パスに保存してください。"
+        "Quick setup instructions:\n"
+        "1. Open Google Cloud Console (https://console.cloud.google.com/) and create a project\n"
+        "2. Enable 'Photos Library API'\n"
+        "3. Configure OAuth consent screen (External, add your Google account as a Test user)\n"
+        "4. Go to Credentials > Create Credentials > OAuth client ID (Type: Desktop App)\n"
+        "5. Download the client secret JSON file and save it to the path above."
     )
 
 def get_credentials(interactive: bool = True) -> Credentials:
-    """保存された認証トークンを取得、またはOAuth認証フローを実行してトークンを保存します。"""
+    """Load authorized user credentials or initiate local server OAuth flow."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     creds = None
 
@@ -46,7 +46,7 @@ def get_credentials(interactive: bool = True) -> Credentials:
         try:
             creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
         except Exception as e:
-            print(f"既存トークンの読み込みエラー: {e}", file=sys.stderr)
+            print(f"Warning: Failed to load existing token: {e}", file=sys.stderr)
             creds = None
 
     if not creds or not creds.valid:
@@ -54,28 +54,28 @@ def get_credentials(interactive: bool = True) -> Credentials:
             try:
                 creds.refresh(Request())
             except Exception as e:
-                print(f"トークンの自動更新に失敗しました: {e}。再認証を実行します。", file=sys.stderr)
+                print(f"Notice: Token refresh failed ({e}). Re-authenticating...", file=sys.stderr)
                 creds = None
 
         if not creds:
             if not interactive:
-                raise RuntimeError("認証トークンが存在しないか期限切れです。一度ターミナル等で対話的認証を実行してください。")
+                raise RuntimeError("Token missing or expired. Run interactive authentication first.")
             
             cred_file = find_credentials_file()
-            print("ブラウザを開いてGoogleアカウントへのアクセスを承認してください...")
+            print("Opening browser for Google account authorization...")
             flow = InstalledAppFlow.from_client_secrets_file(str(cred_file), SCOPES)
             creds = flow.run_local_server(port=0)
             
-            # トークンを保存
+            # Save token
             with open(TOKEN_PATH, "w", encoding="utf-8") as token_file:
                 token_file.write(creds.to_json())
             TOKEN_PATH.chmod(0o600)
-            print("認証に成功し、トークンを安全に保存しました。")
+            print("Authentication successful. Token saved securely.")
 
     return creds
 
 def check_status():
-    """現在の認証ファイルおよびトークンの設定状況を確認します"""
+    """Check configuration and credential status."""
     has_creds = any(p.is_file() for p in CREDENTIALS_PATHS)
     has_token = TOKEN_PATH.is_file()
     token_valid = False
@@ -95,7 +95,7 @@ def check_status():
 if __name__ == "__main__":
     try:
         creds = get_credentials()
-        print("認証ステータス: 有効 (OK)")
+        print("Authentication Status: Valid (OK)")
     except Exception as err:
-        print(f"エラー: {err}", file=sys.stderr)
+        print(f"Error: {err}", file=sys.stderr)
         sys.exit(1)

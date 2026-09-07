@@ -1,96 +1,89 @@
 # Google Photos Uploader for macOS
 
-macOSで画像や動画をオリジナル画質のままGoogleフォトへ簡単にアップロードできるツールです。
-Finderでの右クリック（クイックアクション）、ドラッグ＆ドロップ、ターミナルCLIコマンドに対応しています。
+**English** | [日本語 (Japanese)](README.ja.md)
+
+A seamless macOS tool to upload photos and videos directly to Google Photos in **original quality**.
+Supports Finder Right-Click (Quick Action), Drag-and-Drop App, and Terminal CLI.
 
 ---
 
-## 3つの利用方法
+## 3 Ways to Use
 
-### 1. Finderの右クリック（クイックアクション）
-1. Finderで画像や動画（またはフォルダ）を選択
-2. 右クリック（副ボタンクリック） > **[クイックアクション]** > **[Googleフォトへアップロード]** をクリック
-3. アップロードが実行され、完了時にmacOS通知センターに結果が表示されます
+### 1. Finder Quick Action (Right-Click Context Menu)
+1. Select photos, videos, or folders in Finder.
+2. Right-click > **Quick Actions** > **Upload to Google Photos**.
+3. Files upload in background with macOS notification upon completion.
 
-### 2. ドラッグ＆ドロップ用アプリ
-- `~/dev/_stable/gphotos-uploader/Googleフォトへアップロード.app` にファイルをドラッグ＆ドロップするだけでアップロードできます。
-- アプリをダブルクリックすると、ファイル選択ダイアログまたは認証・ステータス確認が開きます。
-- 必要に応じてDockやデスクトップ、`/Applications`に配置して利用できます。
+### 2. Drag & Drop App (`Upload to Google Photos.app`)
+- Simply drag and drop photos or folders onto the app icon.
+- Double-clicking the app opens a file chooser dialog or status/auth checker.
+- Can be placed on your Desktop, Dock, or `/Applications`.
 
-### 3. ターミナル CLI コマンド (`gphotos-upload`)
+### 3. Terminal Command (`gphotos-upload`)
 ```bash
-# 1枚または複数のファイルをアップロード
+# Upload one or more files
 gphotos-upload photo1.jpg photo2.heic
 
-# フォルダごと再帰的にアップロード
-gphotos-upload ~/Pictures/Trip2026/
+# Upload directory recursively
+gphotos-upload ~/Pictures/Vacation/
 
-# アルバムを指定してアップロード
-gphotos-upload --album "旅行写真" photo.jpg
+# Upload to a specific album (creates album if not existing)
+gphotos-upload --album "Summer 2026" photo.jpg
 
-# 完了時にデスクトップ通知を表示
+# Send macOS notification on completion
 gphotos-upload --notify photo.jpg
 
-# 現在の設定・認証状態を確認
+# Check authentication & configuration status
 gphotos-upload --status
 ```
 
 ---
 
-## 対応ファイル形式（すべてオリジナル品質でアップロード）
+## Supported Media Formats (Original Quality Preserved)
 
-- **画像**: JPEG (`.jpg`, `.jpeg`), PNG (`.png`), HEIC/HEIF (`.heic`, `.heif`), WebP (`.webp`), GIF (`.gif`), TIFF (`.tif`, `.tiff`), BMP (`.bmp`), RAW (`.dng`, `.cr2`, `.nef`, `.arw`, `.rw2`)
-- **動画**: MP4 (`.mp4`), MOV (`.mov`), M4V (`.m4v`), AVI (`.avi`), MKV (`.mkv`), MPEG (`.mpg`, `.mpeg`)
+- **Images**: JPEG (`.jpg`, `.jpeg`), PNG (`.png`), HEIC/HEIF (`.heic`, `.heif`), WebP (`.webp`), GIF (`.gif`), TIFF (`.tif`, `.tiff`), BMP (`.bmp`), RAW (`.dng`, `.cr2`, `.nef`, `.arw`, `.rw2`)
+- **Videos**: MP4 (`.mp4`), MOV (`.mov`), M4V (`.m4v`), AVI (`.avi`), MKV (`.mkv`), MPEG (`.mpg`, `.mpeg`)
 
 ---
 
-## 初回セットアップ手順
+## Quick Setup Guide
 
-本ツールはGoogle Photos Library APIを利用して安全に直接アップロードを行います。
-利用開始前に、ユーザー自身のGoogleアカウントでOAuthクライアント（無料）を1度だけ作成する必要があります。
+This tool uses the official Google Photos Library API with the `photoslibrary.appendonly` scope to securely upload media.
+Because Google requires OAuth 2.0 user credentials, you need to create a free OAuth client ID in your Google Cloud Console once.
 
-### 手順 1: Google Cloud Console での準備
-1. [Google Cloud Console](https://console.cloud.google.com/) にアクセスします。
-2. 上部のプロジェクト選択メニューから **「新しいプロジェクト」** を作成します（プロジェクト名: `gphotos-uploader` など任意）。
-3. ナビゲーションメニューから **「APIとサービス」 > 「ライブラリ」** を開き、**「Photos Library API」** を検索して **有効にする** をクリックします。
-4. **「APIとサービス」 > 「OAuth 同意画面」** を開き、以下を設定します:
-   - User Type: **「外部」** を選択して「作成」
-   - アプリ情報（アプリ名: `gphotos-uploader`、ユーザーサポートメール・デベロッパー連絡先にご自身のGmailアドレスを入力）
-   - 「保存して次へ」を進め、**「テストユーザー」** の画面で **ご自身のGoogleアカウント（Gmailアドレス）を追加** します。（※重要: テストユーザーに追加していないと認証時にエラーになります）
-5. **「APIとサービス」 > 「認証情報」** を開き、**「認証情報を作成」 > 「OAuth クライアント ID」** を選択します:
-   - アプリケーションの種類: **「デスクトップ アプリ」**
-   - 名前: `gphotos-uploader-mac`（任意）
-   - 「作成」をクリック
-6. 作成されたクライアントの右側にあるダウンロードアイコンをクリックし、JSONファイルをダウンロードします。
-7. ダウンロードしたファイルをリネームし、次のいずれかに配置します:
-   - `~/dev/_stable/gphotos-uploader/credentials.json`
-   - または `~/.config/gphotos-uploader/credentials.json`
+### Step 1: Create OAuth Client in Google Cloud Console
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) and create a project (e.g., `gphotos-uploader`).
+2. Navigate to **APIs & Services > Library**, search for **Photos Library API**, and click **Enable**.
+3. Go to **APIs & Services > OAuth consent screen**:
+   - User Type: **External** > Create
+   - Fill in App Name (e.g., `gphotos-uploader`) and your email address.
+   - On the **Test users** page, click **Add Users** and add your Google account email (Essential: only test users can log in while in testing mode).
+4. Go to **APIs & Services > Credentials > Create Credentials > OAuth client ID**:
+   - Application type: **Desktop App**
+   - Name: `gphotos-uploader-mac`
+   - Click **Create**.
+5. Download the client secret JSON file.
+6. Rename the downloaded file to `credentials.json` and place it in:
+   - `credentials.json` (in this repository directory)
+   - OR `~/.config/gphotos-uploader/credentials.json`
 
-### 手順 2: 初回ログイン認証
-ターミナルで以下のコマンドを実行します:
+### Step 2: Run Setup Script
+```bash
+./setup_macos.sh
+```
+This automatically sets up Python virtual environment, compiles the macOS App, installs the Finder Quick Action (`~/Library/Services/`), and creates the `gphotos-upload` command symlink.
+
+### Step 3: Authenticate
+Run in terminal:
 ```bash
 gphotos-upload --auth
 ```
-- 自動的にブラウザが立ち上がり、Googleのログイン・アクセス許可画面が表示されます。
-- 「このアプリはGoogleで確認されていません」と表示された場合は、**「詳細」 > 「（安全ではないページ）に移動」** をクリックして許可してください（自身が作成したアプリのため安全です）。
-- 認証に成功するとトークンが `~/.config/gphotos-uploader/token.json` に安全に保存され、以後は再認証なしで自動更新されます。
+- A browser window will open asking you to sign in with your Google account.
+- If warned "Google hasn't verified this app", click **Advanced > Go to gphotos-uploader (unsafe)** to continue (safe because you are using your own private GCP project).
+- Once authenticated, tokens are safely saved to `~/.config/gphotos-uploader/token.json` (chmod 600) and automatically refreshed.
 
 ---
 
-## ファイル構成
+## License
 
-```text
-~/dev/_stable/gphotos-uploader/
-├── bin/
-│   └── gphotos-upload          # CLIラッパースクリプト
-├── Googleフォトへアップロード.app  # ドラッグ＆ドロップ対応macOSアプリ
-├── Googleフォトへアップロード.workflow # Finderクイックアクション定義
-├── venv/                       # Python仮想環境
-├── auth.py                     # OAuth認証・トークン管理モジュール
-├── uploader.py                 # Google Photos API通信・バッチアップロード処理
-├── cli.py                      # コマンドライン実行モジュール
-├── notify.py                   # macOSデスクトップ通知ヘルパー
-├── requirements.txt            # Python依存パッケージ
-├── setup_macos.sh              # 自動セットアップスクリプト
-└── README.md                   # 本ドキュメント
-```
+MIT License
